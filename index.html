@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<style type="text/css">
+			table{
+				/*border-left: 1px solid #333;
+				border-top:1px solid #333333 ;
+				border-right: 1px solid #333;
+				border-bottom:1px solid #333;*/
+				border: 1px solid #333333;
+				border-radius: 10px;
+				background: white;
+			}
+			td{
+				/*border-right: 1px solid #333;
+				border-bottom:1px solid #333;*/
+				border-radius: 10px;
+				width: 20px;
+				height: 20px;
+			}
+			body{
+				background: url(img/timg.jpg) no-repeat scroll top;
+				/*background-image:url(img/timg.jpg);
+				background-size: 100% 100%;*/
+			}
+		</style>
+	</head>
+	<body>
+		<h1 style="text-align: center;color: white;">贪吃蛇</h1>
+		<script src="js/jquery-3.1.1.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			//循环输出表格
+			document.writeln("<table cellspacing='0' align='center'>");
+				for (var i = 0;i<20;i++) {//循环每一行
+					document.writeln("<tr>");
+					for (var j = 0;j<20;j++) {//一行里的每一个格子
+						document.writeln("<td id='x"+ j +"y"+ i +"' type='map'></td>")
+					}
+					document.writeln("</tr>");
+				}	
+			document.writeln("</table>")
+			
+			//创建蛇
+			var snake = new Array();
+			var snake = [];
+			function createSnake(){
+				var x = parseInt(Math.random()*(20-2));
+				var y = parseInt(Math.random()*20);
+				snake[0] = new Array(x,y);//蛇数组的第一个格子
+				//snake = [[x,y]];
+				
+				$("#x"+x+"y"+y).attr("type","snake");
+				$("#x"+x+"y"+y).css({
+					backgroundColor:"#ccc"
+				})
+				for (var i=1;i<=2;i++) {
+					x++;
+					snake[i] = new Array(x,y);
+					//snake = [[3,4],[4,4],[5,4]];
+					$("#x"+x+"y"+y).attr("type","snake");
+					$("#x"+x+"y"+y).css({
+						backgroundColor:"#ccc"
+					})
+				}
+			}
+			createSnake();
+			console.log(snake);
+			
+			//创建食物
+			var food = new Array();
+			function createFood(){
+				var x = parseInt(Math.random()*20);
+				var y = parseInt(Math.random()*20);
+				if ($("#x"+x+"y"+y).attr("type")=="snake") {
+					var x = parseInt(Math.random()*20);
+					var y = parseInt(Math.random()*20);
+				}
+				food = new Array(x,y);
+				$("#x"+x+"y"+y).attr("type","food");
+				$("#x"+x+"y"+y).css("background-color","red");
+			}
+			createFood();
+			
+			
+			
+			var islive = false;
+			var row = 0;//行的移动
+			var column = 0;//列的移动
+			//创建死亡函数
+			function die(){
+				islive = false;
+				alert("游戏结束");
+				location.reload();//重新加载
+			}
+			
+			function move(){
+				if (!islive) {
+					return;
+				}
+				var x = snake[0][0]+row;
+				var y = snake[0][1]+column;
+				snake.unshift([x,y]);//将x和y的位置作为新的蛇头，插入数组的最前面
+				var type = $("#x"+x+"y"+y).attr("type");
+				if(type == "snake"){
+					console.log(x,y)
+					console.log("类型等于蛇");
+					die();
+				}else if(type=="food"){
+					$("#x"+x+"y"+y).attr("type","snake");
+					$("#x"+x+"y"+y).css({
+						backgroundColor:"#ccc"
+					})
+					createFood();
+					
+					switch(snake.length){
+						case 5:
+							clearInterval(timer);
+							timer = window.setInterval("move()",150);
+							break;
+						case 7:
+							clearInterval(timer);
+							timer = window.setInterval("move()",100);
+							break;
+						case 8:
+							clearInterval(timer);
+							timer = window.setInterval("move()",80);
+							break;
+						case 9:
+							clearInterval(timer);
+							timer = window.setInterval("move()",50);
+							break;
+					}
+					
+				}else if(type=="map"){
+					var tmp= snake.pop();//删掉蛇数组的最后一个格子,tmp变量拿到最后1个数组元素的坐标
+					$("#x"+tmp[0]+"y"+tmp[1]).attr("type","map");//将原来蛇尾巴的位置变成普通的白色格子
+					$("#x"+tmp[0]+"y"+tmp[1]).css("background-color","#fff");
+					$("#x"+x+"y"+y).attr('type','snake');//将原来蛇头前方的格子变成新的蛇头
+					$("#x"+x+"y"+y).css("background-color","#ccc");
+				}else{//蛇头前方的格子既不是蛇也不是普通的白格子，也不是食物，那肯定是到表格的边框了
+					die();//死了
+				}
+				keydown = false;
+			}
+			
+			var direction = "";
+			var timer = 0;//用于暂停
+			var keydown = false;
+			
+			$(function(){
+				$(document).keydown(function(e){//有键按下
+					if(keydown){
+						return;
+					}else{
+					keydown = true;
+					var key = e.keyCode;
+					switch(key){
+						case 32:
+						//spacebar 32 空格
+						if (timer!=0) {
+							clearInterval(timer);
+							timer = 0;
+						} else{
+							if (islive) {
+							timer = setInterval("move()",200);
+							}
+						}
+						return;
+						
+						case 37://左
+						if(direction=="right"){
+							return;
+						}
+				
+						row = -1;//向左移动1个格
+						column = 0;//垂直位置不变
+						direction= "left";
+						break;
+						
+						case 38://上
+						if(direction=="down"){
+							return;
+						}
+						
+						row= 0;//水平方向不变
+						column=-1;//垂直方向向下走一个格
+						direction="up";
+						break;
+						
+						case 39://右
+						if(direction=="left"){
+							return;
+						}
+						
+						row = 1;
+						column = 0;
+						direction="right";
+						break;
+						
+						case 40://down
+						if(direction=="up"){
+							return;
+						}
+						
+						row = 0;
+						column = 1;
+						direction="down";
+						break;
+						default:
+						return;
+					}
+					if(!islive){
+						islive=true;
+						if(row==1&&column==0){//最开始就往右侧移动，因为蛇头默认是最左边的一个格子，则给蛇头调换到最右侧，否则最开始不能往右移动
+							snake.reverse();//reverse() 方法用于颠倒数组中元素的顺序。
+						};
+						
+						timer = window.setInterval("move()",200);
+					}
+					
+					}
+
+					
+				})
+			})
+			
+			
+			
+			
+			
+			
+		</script>
+	</body>
+</html>
